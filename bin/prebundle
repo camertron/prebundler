@@ -1,0 +1,22 @@
+#! /usr/bin/env ruby
+
+require 'prebundler'
+
+# ENV['BUNDLE_GEMFILE'] = '/Users/cameron/workspace/lumos_rails/Gemfile'
+
+config_file = '.prebundle_config'
+# config_file = '/Users/cameron/workspace/lumos_rails/prebundle_config'
+load config_file if File.exist?(config_file)
+
+sub_command_map = {
+  'install' => Prebundler::CLI::Install
+}
+
+sub_command = ARGV[0]
+
+unless sub_command_map.include?(sub_command)
+  puts "Invalid subcommand #{sub_command}"
+  exit 1
+end
+
+sub_command_map[sub_command].run(ARGV[1..-1])
