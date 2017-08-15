@@ -15,28 +15,21 @@ module Prebundler
       end
 
       def run
+        prepare
         install
         check
       end
 
       private
 
+      def prepare
+        gem_list.each do |_, gem_ref|
+          next if backend_file_list.include?(gem_ref.tar_file)
+          install_gem(gem_ref) if gem_ref.installable?
+        end
+      end
+
       def install
-        install_from_archive
-      rescue Aws::S3::Errors::NoSuchKey
-        install_gems
-        archive_gems
-      end
-
-      def install_from_archive
-        puts "Downloading archive..."
-        config.storage_backend.retrieve_file(archive_file, archive_path)
-        puts "Extracting archive..."
-        system "tar -C #{bundle_path} -xf #{archive_path}"
-        FileUtils.rm(archive_path)
-      end
-
-      def install_gems
         Parallel.each(gem_list, in_processes: Etc.nprocessors) do |_, gem_ref|
           next unless gem_ref.installable?
 
@@ -65,18 +58,6 @@ module Prebundler
         puts "Storing #{gem_ref.id}"
         gem_ref.add_to_tar(dest_file)
         config.storage_backend.store_file(dest_file, gem_ref.tar_file)
-      end
-
-      def archive_gems
-        puts 'Archiving gems...'
-
-        gem_list.each do |_, gem_ref|
-          gem_ref.add_to_tar(archive_path) if gem_ref.storable?
-        end
-
-        puts "Storing archive #{archive_path}"
-        config.storage_backend.store_file(archive_path, archive_file)
-        FileUtils.rm(archive_path)
       end
 
       def check
