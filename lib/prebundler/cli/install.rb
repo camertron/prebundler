@@ -49,6 +49,7 @@ module Prebundler
           gem_ref.install_from_tar(dest_file)
           FileUtils.rm(dest_file)
         else
+          puts "Installing #{gem_ref.id} from source"
           gem_ref.install
           store_gem(gem_ref, dest_file) if gem_ref.storable?
         end
