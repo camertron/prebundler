@@ -92,8 +92,7 @@ module Prebundler
     end
 
     def relative_extension_dir
-      # @TODO: fix
-      "extensions/#{Gem::Platform.local}/2.4.0/#{id}"
+      "extensions/#{Bundler.local_platform}/#{Gem.extension_api_version}"
     end
 
     def relative_gem_dir

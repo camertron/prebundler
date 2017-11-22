@@ -5,6 +5,8 @@ module Prebundler
     include TSort
     include Enumerable
 
+    attr_reader :gems
+
     def initialize(gems)
       @gems = gems
     end
@@ -13,7 +15,7 @@ module Prebundler
       return to_enum(__method__) unless block_given?
 
       tsort_each do |name|
-        yield name, @gems[name]
+        yield name, gems[name]
       end
     end
 
@@ -22,12 +24,12 @@ module Prebundler
     private
 
     def tsort_each_node(&block)
-      @gems.keys.each(&block)
+      gems.keys.each(&block)
     end
 
     def tsort_each_child(name, &block)
-      @gems[name].dependencies.each do |dep|
-        yield dep if @gems.include?(dep)
+      gems[name].dependencies.each do |dep|
+        yield dep if gems.include?(dep)
       end
     end
   end
