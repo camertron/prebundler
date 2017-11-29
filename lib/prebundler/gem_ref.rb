@@ -44,7 +44,7 @@ module Prebundler
     end
 
     def install
-      system "gem install -N --ignore-dependencies --source #{source} #{name} -v #{version}"
+      system "gem install -N -i #{bundle_path} --ignore-dependencies --source #{source} #{name} -v #{version}"
       $?.exitstatus == 0
     end
 
