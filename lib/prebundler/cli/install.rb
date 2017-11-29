@@ -17,6 +17,7 @@ module Prebundler
       def prepare
         gem_list.each do |_, gem_ref|
           next if backend_file_list.include?(gem_ref.tar_file)
+          next unless member_of_installable_group?(gem_ref)
           install_gem(gem_ref) if gem_ref.installable?
         end
       end
@@ -44,11 +45,17 @@ module Prebundler
       def install_gem_ref(gem_ref)
         return unless gem_ref.installable?
 
-        unless File.exist?(gem_ref.install_dir)
-          install_gem(gem_ref)
+        unless member_of_installable_group?(gem_ref)
+          out.puts "Skipping #{gem_ref.id} because of its group"
+          return
         end
 
-        out.puts "Installed #{gem_ref.id}"
+        if File.exist?(gem_ref.install_dir)
+          out.puts "Skipping #{gem_ref.id} because it's already installed"
+        else
+          install_gem(gem_ref)
+          out.puts "Installed #{gem_ref.id}"
+        end
       end
 
       def install_gem(gem_ref)
@@ -99,6 +106,22 @@ module Prebundler
 
       def config
         Prebundler.config
+      end
+
+      def member_of_installable_group?(gem_ref)
+        return true if gem_ref.groups.empty?
+        gem_ref.groups.any? { |g| groups.include?(g) }
+      end
+
+      def groups
+        @groups ||= begin
+          all_groups = gem_list.flat_map { |_, gem_ref| gem_ref.groups }.uniq
+          with_groups = (options[:with] || '').split(',').map { |g| g.strip.to_sym }
+          without_groups = (options[:without] || '').split(',').map { |g| g.strip.to_sym }
+
+          groups = with_groups.empty? ? all_groups : with_groups
+          groups - without_groups
+        end
       end
     end
   end

@@ -51,5 +51,9 @@ module Prebundler
       yield if block_given?
       @current_groups = []
     end
+
+    def gemspec
+      # do nothing
+    end
   end
 end

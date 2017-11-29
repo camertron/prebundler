@@ -41,6 +41,12 @@ command :install do |c|
   c.default_value ENV.fetch('BUNDLE_PATH', Bundler.bundle_path.to_s)
   c.flag [:b, :'bundle-path']
 
+  c.desc 'A comma-separated list of groups referencing gems to install.'
+  c.flag :with
+
+  c.desc 'A comma-separated list of groups referencing gems to skip during installation.'
+  c.flag :without
+
   c.action do |global_options, options, args|
     raise 'Must specify a non-zero number of jobs' if options[:jobs] < 1
     Prebundler::Cli::Install.run($out, global_options, options, args)
