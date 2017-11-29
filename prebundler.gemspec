@@ -14,6 +14,7 @@ Gem::Specification.new do |s|
   s.has_rdoc = true
 
   s.add_dependency 'parallel'
+  s.add_dependency 'gli'
 
   # @TODO: remove these
   s.add_dependency 'aws-sdk', '~> 2.0'

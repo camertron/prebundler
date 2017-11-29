@@ -2,7 +2,6 @@ require 'securerandom'
 require 'tmpdir'
 require 'parallel'
 require 'bundler'
-require 'digest/sha2'
 require 'etc'
 
 module Prebundler
@@ -67,22 +66,6 @@ module Prebundler
         if $?.exitstatus != 0
           puts 'Bundle not satisfied, falling back to `bundle install`'
           system 'bundle install'
-        end
-      end
-
-      def archive_file
-        "archive_#{gem_digest}.tar"
-      end
-
-      def archive_path
-        "/tmp/#{archive_file}"
-      end
-
-      def gem_digest
-        @gem_digest ||= begin
-          digest = Digest::SHA2.new
-          gem_list.each { |_, gem_ref| digest << gem_ref.id }
-          digest.hexdigest
         end
       end
 
