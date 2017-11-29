@@ -13,10 +13,11 @@ Gem::Specification.new do |s|
   s.platform = Gem::Platform::RUBY
   s.has_rdoc = true
 
-  s.add_dependency 'parallel'
-  s.add_dependency 'gli'
+  s.add_dependency 'bundler'
+  s.add_dependency 'parallel', '~> 1.0'
+  s.add_dependency 'gli', '~> 2.0'
 
-  # @TODO: remove these
+  # @TODO: remove these, maybe move s3 support into separate gem?
   s.add_dependency 'aws-sdk', '~> 2.0'
   s.add_dependency 'pry-byebug'
 

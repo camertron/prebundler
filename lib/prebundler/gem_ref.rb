@@ -6,17 +6,18 @@ module Prebundler
     DEFAULT_SOURCE = 'https://rubygems.org'
 
     class << self
-      def create(name, options = {})
+      def create(name, bundle_path, options = {})
         ref_type = REF_TYPES.find { |rt| rt.accepts?(options) } || self
-        ref_type.new(name, options)
+        ref_type.new(name, bundle_path, options)
       end
     end
 
-    attr_reader :name
+    attr_reader :name, :bundle_path
     attr_accessor :spec, :dependencies
 
-    def initialize(name, options = {})
+    def initialize(name, bundle_path, options = {})
       @name = name
+      @bundle_path = bundle_path
       @groups = options[:groups]
       @source = options[:source]
       @dependencies = options[:dependencies]
@@ -43,7 +44,7 @@ module Prebundler
     end
 
     def install
-      system "gem install --ignore-dependencies --source #{source} #{name} -v #{version}"
+      system "gem install -N --ignore-dependencies --source #{source} #{name} -v #{version}"
       $?.exitstatus == 0
     end
 
@@ -71,10 +72,6 @@ module Prebundler
       true
     end
 
-    def bundle_path
-      ENV.fetch('BUNDLE_PATH', Bundler.bundle_path.to_s)
-    end
-
     def install_path
       File.join(bundle_path, 'gems')
     end
@@ -92,19 +89,19 @@ module Prebundler
     end
 
     def relative_extension_dir
-      "extensions/#{Bundler.local_platform}/#{Gem.extension_api_version}"
+      File.join('extensions', Bundler.local_platform.to_s, Gem.extension_api_version.to_s, id)
     end
 
     def relative_gem_dir
-      "gems/#{id}"
+      File.join('gems', id)
     end
 
     def relative_gemspec_dir
-      "specifications/#{gemspec_file}"
+      File.join('specifications', gemspec_file)
     end
 
     def tar_file
-      "#{id}.tar"
+      File.join(Bundler.local_platform.to_s, Gem.extension_api_version.to_s, "#{id}.tar")
     end
 
     def gemspec_file

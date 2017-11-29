@@ -28,8 +28,11 @@ module Prebundler
     def list_files
       truncated = true
       continuation_token = nil
-      base_options = { bucket: bucket }
       files = []
+      base_options = {
+        bucket: bucket,
+        prefix: "#{Bundler.local_platform.to_s}/#{Gem.extension_api_version.to_s}"
+      }
 
       while truncated
         options = if continuation_token

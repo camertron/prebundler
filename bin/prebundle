@@ -1,22 +1,87 @@
 #! /usr/bin/env ruby
 
+require 'gli'
+require 'etc'
+require 'bundler'
 require 'prebundler'
+require 'prebundler/version'
 
-# ENV['BUNDLE_GEMFILE'] = '/Users/cameron/workspace/lumos_rails/Gemfile'
+# @TODO: remove
+require 'pry-byebug'
 
-config_file = '.prebundle_config'
-# config_file = '/Users/cameron/workspace/lumos_rails/prebundle_config'
-load config_file if File.exist?(config_file)
+$out = Prebundler::WritePipe.new
 
-sub_command_map = {
-  'install' => Prebundler::CLI::Install
-}
+include GLI::App
 
-sub_command = ARGV[0]
+program_desc 'Gem dependency prebuilder'
 
-unless sub_command_map.include?(sub_command)
-  puts "Invalid subcommand #{sub_command}"
-  exit 1
+version Prebundler::VERSION
+
+subcommand_option_handling :normal
+arguments :strict
+
+desc "Don't log to stdout"
+switch [:s, :silent]
+
+desc 'Path to config file.'
+default_value './.prebundle_config'
+flag [:c, :config]
+
+desc 'Install gems from the Gemfile.lock.'
+command :install do |c|
+  c.desc 'Maximum number of parallel gem installs.'
+  c.default_value Etc.nprocessors
+  c.flag [:j, :jobs], type: Integer
+
+  c.desc 'Path to the gemfile to install gems from.'
+  c.default_value ENV.fetch('BUNDLE_GEMFILE', './Gemfile')
+  c.flag [:g, :gemfile]
+
+  c.desc 'Path to the bundle installation directory.'
+  c.default_value ENV.fetch('BUNDLE_PATH', Bundler.bundle_path.to_s)
+  c.flag [:b, :'bundle-path']
+
+  c.action do |global_options, options, args|
+    raise 'Must specify a non-zero number of jobs' if options[:jobs] < 1
+    Prebundler::Cli::Install.run($out, global_options, options, args)
+  end
 end
 
-sub_command_map[sub_command].run(ARGV[1..-1])
+desc 'List each gem and associated source.'
+command :list do |c|
+  c.desc 'Path to the gemfile.'
+  c.default_value ENV.fetch('BUNDLE_GEMFILE', './Gemfile')
+  c.flag [:g, :gemfile]
+
+  c.desc 'Filter by source. Will perform partial matching.'
+  c.flag [:s, :source], multiple: true
+
+  c.action do |global_options, options, args|
+    Prebundler::Cli::List.run($out, global_options, options, args)
+  end
+end
+
+pre do |global, command, options, args|
+  # Pre logic here
+  # Return true to proceed; false to abort and not call the
+  # chosen command
+  # Use skips_pre before a command to skip this block
+  # on that command only
+  $out.silence! if global[:silent]
+  load global[:config]
+  true
+end
+
+post do |global, command, options, args|
+  # Post logic here
+  # Use skips_post before a command to skip this
+  # block on that command only
+end
+
+on_error do |exception|
+  # Error logic here
+  # return false to skip default error handling
+  true
+end
+
+exit run(ARGV)

@@ -12,13 +12,14 @@ module Prebundler
 
     attr_reader :strategy
 
-    def initialize(name, options = {})
+    def initialize(name, bundle_path, options = {})
       super
       @strategy = options.include?(:git) ? :git : :github
       @uri = options[@strategy]
     end
 
     def install
+      return if File.exist?(cache_dir) || File.exist?(install_dir)
       system "git clone #{uri} \"#{cache_dir}\" --bare --no-hardlinks --quiet"
       return $? if $?.exitstatus != 0
       system "git clone --no-checkout --quiet \"#{cache_dir}\" \"#{install_dir}\""
@@ -42,11 +43,11 @@ module Prebundler
     end
 
     def install_path
-      File.join(ENV['BUNDLE_PATH'], 'bundler', 'gems')
+      File.join(bundle_path, 'bundler', 'gems')
     end
 
     def cache_path
-      File.join(ENV['BUNDLE_PATH'], 'cache', 'bundler', 'git')
+      File.join(bundle_path, 'cache', 'bundler', 'git')
     end
 
     def cache_dir
@@ -60,6 +61,8 @@ module Prebundler
         @uri
       end
     end
+
+    alias_method :source, :uri
 
     def revision
       spec.source.revision

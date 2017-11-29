@@ -1,20 +1,21 @@
 module Prebundler
   class GemfileInterpreter
-    def self.interpret(path)
-      Gemfile.new(new(path).gems)
+    def self.interpret(path, bundle_path)
+      Gemfile.new(new(path, bundle_path).gems)
     end
 
-    attr_reader :gems
+    attr_reader :gems, :bundle_path
 
-    def initialize(path)
+    def initialize(path, bundle_path)
       @gems = {}
       @current_groups = []
+      @bundle_path = bundle_path
       instance_eval(File.read(path))
 
       lockfile = Bundler::LockfileParser.new(File.read("#{path}.lock"))
 
       lockfile.specs.each do |spec|
-        gems[spec.name] ||= GemRef.create(spec.name)
+        gems[spec.name] ||= GemRef.create(spec.name, bundle_path)
         gems[spec.name].spec = spec
         gems[spec.name].dependencies = spec.dependencies.map(&:name)
       end
@@ -30,7 +31,7 @@ module Prebundler
 
     def gem(name, *args)
       options = args.find { |a| a.is_a?(Hash) } || {}
-      gems[name] = GemRef.create(name, current_context.merge(options))
+      gems[name] = GemRef.create(name, bundle_path, current_context.merge(options))
     end
 
     def path(dir)

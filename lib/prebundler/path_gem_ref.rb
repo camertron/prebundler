@@ -6,7 +6,9 @@ module Prebundler
       end
     end
 
-    def initialize(name, options = {})
+    attr_reader :path
+
+    def initialize(name, bundle_path, options = {})
       super
       @path = options[:path]
     end
@@ -18,5 +20,7 @@ module Prebundler
     def storable?
       false
     end
+
+    alias_method :source, :path
   end
 end
