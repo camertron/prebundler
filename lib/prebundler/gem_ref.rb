@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'set'
 
 module Prebundler
   class GemRef
@@ -12,23 +13,19 @@ module Prebundler
       end
     end
 
-    attr_reader :name, :bundle_path
+    attr_reader :name, :bundle_path, :groups
     attr_accessor :spec, :dependencies
 
     def initialize(name, bundle_path, options = {})
       @name = name
       @bundle_path = bundle_path
-      @groups = options[:groups]
+      @groups = Set.new(options[:groups])
       @source = options[:source]
       @dependencies = options[:dependencies]
     end
 
     def dependencies
       @dependencies ||= []
-    end
-
-    def groups
-      @groups ||= []
     end
 
     def source
@@ -44,8 +41,8 @@ module Prebundler
     end
 
     def install
-      system "gem install -N -i #{bundle_path} --ignore-dependencies --source #{source} #{name} -v #{version}"
-      $?.exitstatus == 0
+      system({ "GEM_HOME" => bundle_path }, "gem install -N --ignore-dependencies --source #{source} #{name} -v #{version}")
+      $?.exitstatus
     end
 
     def install_from_tar(tar_file)
@@ -57,10 +54,27 @@ module Prebundler
       tar_flags = File.exist?(tar_file) ? '-rf' : '-cf'
 
       system "tar -C #{bundle_path} #{tar_flags} #{tar_file} #{relative_gem_dir}"
-      system "tar -C #{bundle_path} -rf #{tar_file} #{relative_gemspec_dir}"
+
+      relative_gemspec_files.each do |relative_gemspec_file|
+        system "tar -C #{bundle_path} -rf #{tar_file} #{relative_gemspec_file}"
+      end
 
       if File.directory?(extension_dir)
         system "tar -C #{bundle_path} -rf #{tar_file} #{relative_extension_dir}"
+      end
+
+      executables.each do |executable|
+        system "tar -C #{bundle_path} -rf #{tar_file} #{File.join('bin', executable)}"
+      end
+    end
+
+    def executables
+      gemspecs.flat_map(&:executables)
+    end
+
+    def gemspecs
+      @gemspecs ||= relative_gemspec_files.map do |relative_gemspec_file|
+        Bundler.load_gemspec(File.join(bundle_path, relative_gemspec_file))
       end
     end
 
@@ -96,8 +110,8 @@ module Prebundler
       File.join('gems', id)
     end
 
-    def relative_gemspec_dir
-      File.join('specifications', gemspec_file)
+    def relative_gemspec_files
+      [File.join('specifications', gemspec_file)]
     end
 
     def tar_file

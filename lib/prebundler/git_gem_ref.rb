@@ -15,10 +15,13 @@ module Prebundler
     def initialize(name, bundle_path, options = {})
       super
       @strategy = options.include?(:git) ? :git : :github
-      @uri = options[@strategy]
     end
 
     def install
+      FileUtils.mkdir_p(spec_path)
+      FileUtils.mkdir_p(install_path)
+      FileUtils.mkdir_p(cache_path)
+
       return if File.exist?(cache_dir) || File.exist?(install_dir)
       system "git clone #{uri} \"#{cache_dir}\" --bare --no-hardlinks --quiet"
       return $? if $?.exitstatus != 0
@@ -55,11 +58,7 @@ module Prebundler
     end
 
     def uri
-      if strategy == :github
-        "git://github.com/#{@uri}.git"
-      else
-        @uri
-      end
+      spec.source.uri
     end
 
     alias_method :source, :uri
@@ -68,16 +67,26 @@ module Prebundler
       spec.source.revision
     end
 
+    def gemspecs
+      @gemspecs ||= gemspec_files.map do |gemspec_file|
+        Bundler.load_gemspec(gemspec_file)
+      end
+    end
+
     private
 
+    def gemspec_files
+      @gemspec_files ||= Dir[File.join(install_dir, '*.gemspec')]
+    end
+
     def copy_gemspecs
-      FileUtils.cp(Dir[File.join(install_dir, '*.gemspec')], spec_path)
+      FileUtils.cp(gemspec_files, spec_path)
     end
 
     # adapted from
     # https://github.com/bundler/bundler/blob/fea23637886c1b1bde471c98344b8844f82e60ce/lib/bundler/source/git.rb#L237
     def serialize_gemspecs
-      Dir[File.join(install_dir, '*.gemspec')].each do |path|
+      gemspec_files.each do |path|
         # Evaluate gemspecs and cache the result. Gemspecs
         # in git might require git or other dependencies.
         # The gemspecs we cache should already be evaluated.
@@ -100,7 +109,7 @@ module Prebundler
         # If there is no URI scheme, assume it is an ssh/git URI
         input = uri
       end
-      Digest::SHA1.hexdigest(input)
+      Bundler::SharedHelpers.digest(:SHA1).hexdigest(input)
     end
   end
 end

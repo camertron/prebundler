@@ -1,18 +1,21 @@
+require 'set'
+
 module Prebundler
   class GemfileInterpreter
-    def self.interpret(path, bundle_path)
-      Gemfile.new(new(path, bundle_path).gems)
+    def self.interpret(gemfile_path, bundle_path)
+      Gemfile.new(new(gemfile_path, bundle_path).gems)
     end
 
-    attr_reader :gems, :bundle_path
+    attr_reader :gems, :gemfile_path, :bundle_path
 
-    def initialize(path, bundle_path)
+    def initialize(gemfile_path, bundle_path)
       @gems = {}
-      @current_groups = []
+      @current_groups = [:global]
+      @gemfile_path = gemfile_path
       @bundle_path = bundle_path
-      instance_eval(File.read(path))
+      instance_eval(File.read(gemfile_path))
 
-      lockfile = Bundler::LockfileParser.new(File.read("#{path}.lock"))
+      lockfile = Bundler::LockfileParser.new(File.read("#{gemfile_path}.lock"))
 
       lockfile.specs.each do |spec|
         gems[spec.name] ||= GemRef.create(spec.name, bundle_path)
@@ -35,7 +38,7 @@ module Prebundler
     end
 
     def path(dir)
-      @current_path = dir
+      @current_path = File.join(File.dirname(gemfile_path), dir)
       yield if block_given?
       @current_path = nil
     end
@@ -49,7 +52,7 @@ module Prebundler
     def group(*groups)
       @current_groups = groups
       yield if block_given?
-      @current_groups = []
+      @current_groups = [:global]
     end
 
     def gemspec

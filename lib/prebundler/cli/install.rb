@@ -1,7 +1,8 @@
 require 'securerandom'
 require 'tmpdir'
 require 'parallel'
-require 'bundler'
+require 'fileutils'
+require 'yaml'
 
 module Prebundler
   module Cli
@@ -9,15 +10,34 @@ module Prebundler
       def run
         prepare
         install
+        update_bundle_config
+        generate_binstubs
         check
       end
 
       private
 
       def prepare
-        gem_list.each do |_, gem_ref|
+        FileUtils.mkdir_p(bundle_path)
+
+        gem_list.each do |name, gem_ref|
           next if backend_file_list.include?(gem_ref.tar_file)
           next unless member_of_installable_group?(gem_ref)
+
+          # Edge case: installation could fail if dependencies of this
+          # gem ref haven't been installed yet. They should have been
+          # prepared by this point because of the tsort logic in the
+          # gemfile class, but we need to actually install them in
+          # order to install this current gem. A good example is nokogiri,
+          # which can't build its native extension without mini-portile2.
+          gem_ref.dependencies.each do |dep|
+            if gem_list.gems[dep]
+              install_gem_ref(gem_list.gems[dep])
+            else
+              out.puts "Oops, couldn't find dependency #{dep}"
+            end
+          end
+
           install_gem(gem_ref) if gem_ref.installable?
         end
       end
@@ -79,17 +99,42 @@ module Prebundler
         config.storage_backend.store_file(dest_file, gem_ref.tar_file)
       end
 
+      def update_bundle_config
+        file = Bundler.app_config_path.join('config').to_s
+        config = File.exist?(file) ? YAML.load_file(file) : {}
+        config['BUNDLE_WITH'] = with_groups.join(':') unless with_groups.empty?
+        config['BUNDLE_WITHOUT'] = without_groups.join(':') unless without_groups.empty?
+        File.write(file, YAML.dump(config))
+      end
+
+      def generate_binstubs
+        out.puts 'Generating binstubs...'
+
+        gems_with_executables = gem_list.gems.values.select do |gem_ref|
+          next false unless member_of_installable_group?(gem_ref)
+          !gem_ref.executables.empty?
+        end
+
+        return if gems_with_executables.empty?
+
+        system "bundle binstubs #{gems_with_executables.map(&:name).join(' ')}"
+        system "bundle binstubs --force bundler"
+        out.puts 'Done generating binstubs'
+      end
+
       def check
-        system 'bundle check'
+        system "bundle check --gemfile #{gemfile_path}"
 
         if $?.exitstatus != 0
           out.puts 'Bundle not satisfied, falling back to `bundle install`'
-          system 'bundle install'
+          # system 'bundle install'
         end
       end
 
       def gem_list
-        @gem_list ||= Prebundler::GemfileInterpreter.interpret(gemfile_path, bundle_path)
+        @gem_list ||= Prebundler::GemfileInterpreter.interpret(
+          gemfile_path, bundle_path
+        )
       end
 
       def backend_file_list
@@ -115,13 +160,17 @@ module Prebundler
 
       def groups
         @groups ||= begin
-          all_groups = gem_list.flat_map { |_, gem_ref| gem_ref.groups }.uniq
-          with_groups = (options[:with] || '').split(',').map { |g| g.strip.to_sym }
-          without_groups = (options[:without] || '').split(',').map { |g| g.strip.to_sym }
-
-          groups = with_groups.empty? ? all_groups : with_groups
-          groups - without_groups
+          all_groups = gem_list.flat_map { |_, gem_ref| gem_ref.groups.to_a }.uniq
+          (all_groups + with_groups).uniq - without_groups
         end
+      end
+
+      def with_groups
+        @with_groups ||= (options[:with] || '').split(/[:, ]/).map { |g| g.strip.to_sym }
+      end
+
+      def without_groups
+        @without_groups ||= (options[:without] || '').split(/[:, ]/).map { |g| g.strip.to_sym }
       end
     end
   end
