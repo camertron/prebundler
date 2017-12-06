@@ -17,9 +17,8 @@ Gem::Specification.new do |s|
   s.add_dependency 'parallel', '~> 1.0'
   s.add_dependency 'gli', '~> 2.0'
 
-  # @TODO: remove these, maybe move s3 support into separate gem?
+  # @TODO: move s3 support into separate gem
   s.add_dependency 'aws-sdk', '~> 2.0'
-  s.add_dependency 'pry-byebug'
 
   s.executables << 'prebundle'
 
