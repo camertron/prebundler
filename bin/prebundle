@@ -6,9 +6,6 @@ require 'bundler'
 require 'prebundler'
 require 'prebundler/version'
 
-# @TODO: remove
-require 'pry-byebug'
-
 $out = Prebundler::WritePipe.new
 
 include GLI::App

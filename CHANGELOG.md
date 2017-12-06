@@ -1,3 +1,7 @@
+0.5.1
+===
+- Remove pry-byebug require.
+
 0.5.0
 ===
 - Works for a repository with a significant number of dependencies (~ 400).
