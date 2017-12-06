@@ -127,8 +127,16 @@ module Prebundler
 
         if $?.exitstatus != 0
           out.puts 'Bundle not satisfied, falling back to `bundle install`'
-          # system 'bundle install'
+          system "bundle install #{bundle_install_args}"
         end
+      end
+
+      def bundle_install_args
+        [].tap do |args|
+          args << "--with #{with_groups}" unless with_groups.empty?
+          args << "--without #{without_groups}" unless without_groups.empty?
+          args << "--jobs #{options[:jobs]}"
+        end.join(' ')
       end
 
       def gem_list
