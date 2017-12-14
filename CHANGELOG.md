@@ -1,3 +1,7 @@
+0.5.2
+===
+- Set `BUNDLE_GEMFILE` during prepare step so bundler doesn't complain when we try to call `Bundler.app_config_path`.
+
 0.5.1
 ===
 - Remove pry-byebug require.
