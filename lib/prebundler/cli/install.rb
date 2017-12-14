@@ -19,6 +19,7 @@ module Prebundler
 
       def prepare
         FileUtils.mkdir_p(bundle_path)
+        ENV['BUNDLE_GEMFILE'] = gemfile_path
 
         gem_list.each do |name, gem_ref|
           next if backend_file_list.include?(gem_ref.tar_file)
