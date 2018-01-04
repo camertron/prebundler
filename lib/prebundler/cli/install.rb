@@ -109,6 +109,7 @@ module Prebundler
       end
 
       def generate_binstubs
+        return unless options[:binstubs]
         out.puts 'Generating binstubs...'
 
         gems_with_executables = gem_list.gems.values.select do |gem_ref|
@@ -138,6 +139,7 @@ module Prebundler
           args << "--with #{with_groups}" unless with_groups.empty?
           args << "--without #{without_groups}" unless without_groups.empty?
           args << "--jobs #{options[:jobs]}"
+          args << "--binstubs" if options[:binstubs]
         end.join(' ')
       end
 

@@ -1,3 +1,7 @@
+0.6.2
+===
+- Provide CLI option to generate binstubs.
+
 0.5.2
 ===
 - Set `BUNDLE_GEMFILE` during prepare step so bundler doesn't complain when we try to call `Bundler.app_config_path`.

@@ -44,6 +44,10 @@ command :install do |c|
   c.desc 'A comma-separated list of groups referencing gems to skip during installation.'
   c.flag :without
 
+  c.desc 'Generate binstubs for installed gems.'
+  c.default_value true
+  c.switch :binstubs
+
   c.action do |global_options, options, args|
     raise 'Must specify a non-zero number of jobs' if options[:jobs] < 1
     Prebundler::Cli::Install.run($out, global_options, options, args)
