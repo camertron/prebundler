@@ -38,6 +38,9 @@ command :install do |c|
   c.default_value ENV.fetch('BUNDLE_PATH', Bundler.bundle_path.to_s)
   c.flag [:b, :'bundle-path']
 
+  c.desc 'Backend prefix (i.e. path) at which to store gems.'
+  c.flag [:prefix]
+
   c.desc 'A comma-separated list of groups referencing gems to install.'
   c.flag :with
 

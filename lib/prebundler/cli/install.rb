@@ -145,7 +145,7 @@ module Prebundler
 
       def gem_list
         @gem_list ||= Prebundler::GemfileInterpreter.interpret(
-          gemfile_path, bundle_path
+          gemfile_path, bundle_path, prefix: options[:prefix]
         )
       end
 

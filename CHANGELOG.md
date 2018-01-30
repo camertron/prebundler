@@ -1,3 +1,7 @@
+0.7.0
+===
+- Add prefix option to install command.
+
 0.6.2
 ===
 - Provide CLI option to generate binstubs.

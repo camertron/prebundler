@@ -14,7 +14,7 @@ module Prebundler
     end
 
     attr_reader :name, :bundle_path, :groups
-    attr_accessor :spec, :dependencies
+    attr_accessor :spec, :dependencies, :prefix
 
     def initialize(name, bundle_path, options = {})
       @name = name
@@ -22,6 +22,7 @@ module Prebundler
       @groups = Set.new(options[:groups])
       @source = options[:source]
       @dependencies = options[:dependencies]
+      @prefix = options[:prefix]
     end
 
     def dependencies
@@ -115,7 +116,8 @@ module Prebundler
     end
 
     def tar_file
-      File.join(Bundler.local_platform.to_s, Gem.extension_api_version.to_s, "#{id}.tar")
+      file = File.join(Bundler.local_platform.to_s, Gem.extension_api_version.to_s, "#{id}.tar")
+      prefix && !prefix.empty? ? File.join(prefix, file) : file
     end
 
     def gemspec_file
