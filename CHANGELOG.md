@@ -1,3 +1,8 @@
+0.7.1
+===
+- Support git-based gems with non-standard repo names.
+- Fix `bundle install` fallback (group args were wrong).
+
 0.7.0
 ===
 - Add prefix option to install command.

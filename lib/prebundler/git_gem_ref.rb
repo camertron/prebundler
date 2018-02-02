@@ -73,6 +73,14 @@ module Prebundler
       end
     end
 
+    def install_dir
+      File.join(install_path, "#{repo_name}-#{version}")
+    end
+
+    def repo_name
+      @repo_name ||= URI.parse(uri).path.split('/').last.chomp('.git')
+    end
+
     private
 
     def gemspec_files

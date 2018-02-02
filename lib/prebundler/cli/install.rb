@@ -136,8 +136,8 @@ module Prebundler
       def bundle_install_args
         [].tap do |args|
           args << "--gemfile #{gemfile_path}"
-          args << "--with #{with_groups}" unless with_groups.empty?
-          args << "--without #{without_groups}" unless without_groups.empty?
+          args << "--with #{with_groups.join(',')}" unless with_groups.empty?
+          args << "--without #{without_groups.join(',')}" unless without_groups.empty?
           args << "--jobs #{options[:jobs]}"
           args << "--binstubs" if options[:binstubs]
         end.join(' ')
