@@ -1,3 +1,7 @@
+0.7.2
+===
+- Fix use of continuation token when listing remote files in S3 backend.
+
 0.7.1
 ===
 - Support git-based gems with non-standard repo names.

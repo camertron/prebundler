@@ -43,7 +43,7 @@ module Prebundler
 
         response = client.list_objects_v2(options)
         truncated = response.is_truncated
-        continuation_token = response.continuation_token
+        continuation_token = response.next_continuation_token
 
         response.contents.each do |file|
           files << file.key
