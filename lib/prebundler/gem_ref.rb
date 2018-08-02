@@ -25,6 +25,10 @@ module Prebundler
       @prefix = options[:prefix]
     end
 
+    def to_gem
+      "gem '#{name}', '= #{version}'"
+    end
+
     def dependencies
       @dependencies ||= []
     end
@@ -32,6 +36,8 @@ module Prebundler
     def source
       @source ||= DEFAULT_SOURCE
     end
+
+    alias_method :remote, :source
 
     def id
       "#{name}-#{version}"
