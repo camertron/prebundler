@@ -71,6 +71,35 @@ command :list do |c|
   end
 end
 
+desc 'Generate a subset of a Gemfile.'
+command :subset do |c|
+  c.desc 'Path to the gemfile.'
+  c.default_value ENV.fetch('BUNDLE_GEMFILE', './Gemfile')
+  c.flag [:g, :gemfile]
+
+  c.desc 'Path to the bundle installation directory.'
+  c.default_value ENV.fetch('BUNDLE_PATH', Bundler.bundle_path.to_s)
+  c.flag [:b, :'bundle-path']
+
+  c.desc 'Gem (and dependencies) to include in the subset.'
+  c.flag [:i, :include], multiple: true
+
+  c.desc "Add an additional gem to the subset. The gem doesn't have to be part of the original Gemfile."
+  c.flag [:a, :add], multiple: true
+
+  c.desc 'Include development dependencies of subsetted gems.'
+  c.default_value false
+  c.switch [:d, :development]
+
+  c.desc 'File path to output the resulting Gemfile into. Use - for standard output.'
+  c.default_value '-'
+  c.flag [:o, :output]
+
+  c.action do |global_options, options, args|
+    Prebundler::Cli::Subset.run($out, global_options, options, args)
+  end
+end
+
 pre do |global, command, options, args|
   # Pre logic here
   # Return true to proceed; false to abort and not call the
@@ -78,7 +107,7 @@ pre do |global, command, options, args|
   # Use skips_pre before a command to skip this block
   # on that command only
   $out.silence! if global[:silent]
-  load global[:config]
+  load global[:config] unless global[:config]
   true
 end
 

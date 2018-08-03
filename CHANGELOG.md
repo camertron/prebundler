@@ -1,3 +1,7 @@
+0.8.0
+===
+- Add the subset command for generating subsets of gemfiles.
+
 0.7.2
 ===
 - Fix use of continuation token when listing remote files in S3 backend.

@@ -33,6 +33,10 @@ module Prebundler
       $?
     end
 
+    def to_gem
+      "gem '#{name}', git: '#{uri}', ref: '#{revision}'"
+    end
+
     def version
       revision[0...12]
     end
@@ -62,6 +66,10 @@ module Prebundler
     end
 
     alias_method :source, :uri
+
+    def remote
+      nil
+    end
 
     def revision
       spec.source.revision

@@ -5,6 +5,7 @@ module Prebundler
   autoload :PathGemRef,         'prebundler/path_gem_ref'
   autoload :Gemfile,            'prebundler/gemfile'
   autoload :GemfileInterpreter, 'prebundler/gemfile_interpreter'
+  autoload :GemfileSubset,      'prebundler/gemfile_subset'
   autoload :GemRef,             'prebundler/gem_ref'
   autoload :GitGemRef,          'prebundler/git_gem_ref'
   autoload :S3Backend,          'prebundler/s3_backend'
