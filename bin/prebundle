@@ -107,7 +107,7 @@ pre do |global, command, options, args|
   # Use skips_pre before a command to skip this block
   # on that command only
   $out.silence! if global[:silent]
-  load global[:config] unless global[:config]
+  load global[:config] if global[:config]
   true
 end
 

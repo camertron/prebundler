@@ -1,3 +1,7 @@
+0.8.1
+===
+- Fix bug causing config to not be loaded.
+
 0.8.0
 ===
 - Add the subset command for generating subsets of gemfiles.
