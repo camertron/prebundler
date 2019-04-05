@@ -1,5 +1,6 @@
 require 'fileutils'
 require 'set'
+require 'ohai'
 
 module Prebundler
   class GemRef
@@ -122,8 +123,13 @@ module Prebundler
     end
 
     def tar_file
-      file = File.join(Bundler.local_platform.to_s, Gem.extension_api_version.to_s, "#{id}.tar")
+      platform_version = "#{system_info['platform']}-#{system_info['platform_version']}"
+      file = File.join(Bundler.local_platform.to_s, platform_version, Gem.extension_api_version.to_s, "#{id}.tar")
       prefix && !prefix.empty? ? File.join(prefix, file) : file
+    end
+
+    def system_info
+      @@system_info ||= Ohai::System.new.all_plugins(['platform'])
     end
 
     def gemspec_file

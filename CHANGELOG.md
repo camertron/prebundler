@@ -1,3 +1,7 @@
+0.9.0
+===
+- Include platform version when uploading gem tarballs to the storage backend (this will cause bundles installed by previous versions of prebundler to be rebuilt).
+
 0.8.1
 ===
 - Fix bug causing config to not be loaded.
