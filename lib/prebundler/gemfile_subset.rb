@@ -1,3 +1,5 @@
+require 'set'
+
 module Prebundler
   class GemfileSubset
     attr_reader :gemfile, :included_gems, :additional_gems, :raw
@@ -8,7 +10,7 @@ module Prebundler
 
     def initialize(gemfile)
       @gemfile = gemfile
-      @included_gems = []
+      @included_gems = Set.new
       @additional_gems = []
       @raw = []
     end
@@ -46,17 +48,11 @@ module Prebundler
       end
 
       ''.tap do |result|
-        (groups.keys - [nil]).each_with_index do |remote, idx|
+        groups.each_with_index do |(remote, _), idx|
           result << "\n" if idx > 0
           result << "source '#{remote}' do\n"
           result << groups[remote].map { |g| "  #{g}" }.join("\n")
           result << "\nend\n"
-        end
-
-        unless groups[nil].empty?
-          result << "\n"
-          result << groups[nil].join("\n")
-          result << "\n"
         end
       end
     end
@@ -67,24 +63,26 @@ module Prebundler
       Hash.new { |h, k| h[k] = [] }.tap do |ret|
         deps.each do |dep|
           if spec = gemfile.gems[dep.name]
-            ret[spec.remote] << spec.to_gem
+            ret[spec.remote || GemRef::DEFAULT_SOURCE] << spec.to_gem
           else
             req_str = dep.requirements_list.map { |r| "'#{r}'" }.join(', ')
-            ret[nil] << "gem '#{dep.name}', #{req_str}"
+            ret[GemRef::DEFAULT_SOURCE] << "gem '#{dep.name}', #{req_str}"
           end
         end
       end
     end
 
     def aggregate_deps(include_dev_deps)
-      Set.new.tap do |result|
+      dep_names = Set.new.tap do |result|
         included_gems.each do |included_gem_name|
           gemfile.gems[included_gem_name].gemspecs.each do |gemspec|
-            result.merge(gemspec.runtime_dependencies)
-            result.merge(gemspec.development_dependencies) if include_dev_deps
+            result.merge(gemspec.runtime_dependencies.map(&:name))
+            result.merge(gemspec.development_dependencies.map(&:name)) if include_dev_deps
           end
         end
       end
+
+      dep_names.map { |dep_name| gemfile.gems[dep_name] }.compact
     end
   end
 end

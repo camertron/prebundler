@@ -1,3 +1,5 @@
+require 'ohai'
+
 module Prebundler
   autoload :Cli,                'prebundler/cli'
   autoload :Configurator,       'prebundler/configurator'
@@ -22,6 +24,16 @@ module Prebundler
 
     def configured?
       !!@config
+    end
+
+    def platform_version
+      @platform_version ||= "#{system_info['platform']}-#{system_info['platform_version']}"
+    end
+
+    private
+
+    def system_info
+      @@system_info ||= Ohai::System.new.all_plugins(['platform'])
     end
   end
 end

@@ -1,3 +1,8 @@
+0.9.1
+===
+- Woops, also use platform version when determining the gems that have already been built.
+- Fix the subsetter so it outputs gems inside correct source blocks.
+
 0.9.0
 ===
 - Include platform version when uploading gem tarballs to the storage backend (this will cause bundles installed by previous versions of prebundler to be rebuilt).

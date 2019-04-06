@@ -31,7 +31,7 @@ module Prebundler
       files = []
       base_options = {
         bucket: bucket,
-        prefix: "#{Bundler.local_platform.to_s}/#{Gem.extension_api_version.to_s}"
+        prefix: "#{Bundler.local_platform.to_s}/#{Prebundler.platform_version}/#{Gem.extension_api_version.to_s}"
       }
 
       while truncated
