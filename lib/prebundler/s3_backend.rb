@@ -2,13 +2,15 @@ require 'aws-sdk'
 
 module Prebundler
   class S3Backend
-    attr_reader :access_key_id, :secret_access_key, :bucket, :region
+    attr_reader :access_key_id, :secret_access_key, :bucket, :region, :endpoint, :force_path_style
 
     def initialize(options = {})
       @access_key_id = options.fetch(:access_key_id)
       @secret_access_key = options.fetch(:secret_access_key)
       @bucket = options.fetch(:bucket)
-      @region = options.fetch(:region)
+      @region = options.fetch(:region) { 'us-east-1' }
+      @endpoint = options.fetch(:endpoint) { 's3.amazonaws.com' }
+      @force_path_style = options.fetch(:force_path_style) { false }
     end
 
     def store_file(source_file, dest_file)
@@ -60,7 +62,7 @@ module Prebundler
     private
 
     def client
-      @client ||= Aws::S3::Client.new(region: region, credentials: credentials)
+      @client ||= Aws::S3::Client.new(region: region, credentials: credentials, endpoint: endpoint, force_path_style: force_path_style)
     end
 
     def credentials
