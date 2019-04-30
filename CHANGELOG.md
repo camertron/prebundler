@@ -1,3 +1,7 @@
+0.10.0
+===
+- Update aws-sdk client creation to be able to support non-aws s3 api endpoints (e.g. minio)
+
 0.9.1
 ===
 - Woops, also use platform version when determining the gems that have already been built.
