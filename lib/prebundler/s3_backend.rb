@@ -1,23 +1,18 @@
 # frozen_string_literal: true
 
 require 'aws-sdk'
-require 'securerandom'
 
 module Prebundler
   class S3Backend
-    attr_reader :access_key_id, :secret_access_key, :role_arn, :profile
-    attr_reader :bucket, :region, :endpoint, :force_path_style
+    attr_reader :access_key_id, :secret_access_key, :bucket, :region
 
     def initialize(options = {})
       @bucket             = options.fetch(:bucket)
 
+      @client             = options.fetch(:client, nil)
       @access_key_id      = options.fetch(:access_key_id, nil)
       @secret_access_key  = options.fetch(:secret_access_key, nil)
-      @role_arn           = options.fetch(:role_arn, nil)
-      @profile            = options.fetch(:profile, nil)
       @region             = options.fetch(:region) { ENV['AWS_REGION'] || 'us-east-1' }
-      @endpoint           = options.fetch(:endpoint, nil)
-      @force_path_style   = options.fetch(:force_path_style, false)
     end
 
     def store_file(source_file, dest_file)
@@ -45,10 +40,10 @@ module Prebundler
 
       while truncated
         options = if continuation_token
-                    base_options.merge(continuation_token: continuation_token)
-                  else
-                    base_options
-                  end
+          base_options.merge(continuation_token: continuation_token)
+        else
+          base_options
+        end
 
         response = client.list_objects_v2(options)
         truncated = response.is_truncated
@@ -69,33 +64,11 @@ module Prebundler
     private
 
     def client
-      @client ||= Aws::S3::Client.new({}.tap do |o|
-        o[:credentials]       = credentials
-        o[:region]            = region
-        o[:endpoint]          = endpoint if endpoint
-        o[:force_path_style]  = true if force_path_style
-      end)
+      @client ||= Aws::S3::Client.new(region: region, credentials: credentials)
     end
 
     def credentials
-      @credentials ||= begin
-        if role_arn
-          Aws::AssumeRoleCredentials.new({}.tap do |o|
-            o[:role_arn]           = role_arn
-            o[:role_session_name]  = "prebundler-#{SecureRandom.hex}"
-            if access_key_id && secret_access_key
-              o[:client] = Aws::STS::Client.new(
-                region: region,
-                credentials: Aws::Credentials.new(access_key_id, secret_access_key)
-              )
-            end
-          end)
-        elsif access_key_id && secret_access_key
-          Aws::Credentials.new(access_key_id, secret_access_key)
-        else
-          Aws::SharedCredentials.new(profile_name: profile)
-        end
-      end
+      @credentials ||= Aws::Credentials.new(access_key_id, secret_access_key)
     end
   end
 end
