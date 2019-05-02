@@ -1,16 +1,23 @@
+# frozen_string_literal: true
+
 require 'aws-sdk'
+require 'securerandom'
 
 module Prebundler
   class S3Backend
-    attr_reader :access_key_id, :secret_access_key, :bucket, :region, :endpoint, :force_path_style
+    attr_reader :access_key_id, :secret_access_key, :role_arn, :profile
+    attr_reader :bucket, :region, :endpoint, :force_path_style
 
     def initialize(options = {})
-      @access_key_id = options.fetch(:access_key_id)
-      @secret_access_key = options.fetch(:secret_access_key)
-      @bucket = options.fetch(:bucket)
-      @region = options.fetch(:region) { 'us-east-1' }
-      @endpoint = options.fetch(:endpoint) { 's3.amazonaws.com' }
-      @force_path_style = options.fetch(:force_path_style) { false }
+      @bucket             = options.fetch(:bucket)
+
+      @access_key_id      = options.fetch(:access_key_id, nil)
+      @secret_access_key  = options.fetch(:secret_access_key, nil)
+      @role_arn           = options.fetch(:role_arn, nil)
+      @profile            = options.fetch(:profile, nil)
+      @region             = options.fetch(:region) { ENV['AWS_REGION'] || 'us-east-1' }
+      @endpoint           = options.fetch(:endpoint, nil)
+      @force_path_style   = options.fetch(:force_path_style, false)
     end
 
     def store_file(source_file, dest_file)
@@ -33,15 +40,15 @@ module Prebundler
       files = []
       base_options = {
         bucket: bucket,
-        prefix: "#{Bundler.local_platform.to_s}/#{Prebundler.platform_version}/#{Gem.extension_api_version.to_s}"
+        prefix: "#{Bundler.local_platform}/#{Prebundler.platform_version}/#{Gem.extension_api_version}"
       }
 
       while truncated
         options = if continuation_token
-          base_options.merge(continuation_token: continuation_token)
-        else
-          base_options
-        end
+                    base_options.merge(continuation_token: continuation_token)
+                  else
+                    base_options
+                  end
 
         response = client.list_objects_v2(options)
         truncated = response.is_truncated
@@ -62,11 +69,33 @@ module Prebundler
     private
 
     def client
-      @client ||= Aws::S3::Client.new(region: region, credentials: credentials, endpoint: endpoint, force_path_style: force_path_style)
+      @client ||= Aws::S3::Client.new({}.tap do |o|
+        o[:credentials]       = credentials
+        o[:region]            = region
+        o[:endpoint]          = endpoint if endpoint
+        o[:force_path_style]  = true if force_path_style
+      end)
     end
 
     def credentials
-      @credentials ||= Aws::Credentials.new(access_key_id, secret_access_key)
+      @credentials ||= begin
+        if role_arn
+          Aws::AssumeRoleCredentials.new({}.tap do |o|
+            o[:role_arn]           = role_arn
+            o[:role_session_name]  = "prebundler-#{SecureRandom.hex}"
+            if access_key_id && secret_access_key
+              o[:client] = Aws::STS::Client.new(
+                region: region,
+                credentials: Aws::Credentials.new(access_key_id, secret_access_key)
+              )
+            end
+          end)
+        elsif access_key_id && secret_access_key
+          Aws::Credentials.new(access_key_id, secret_access_key)
+        else
+          Aws::SharedCredentials.new(profile_name: profile)
+        end
+      end
     end
   end
 end
