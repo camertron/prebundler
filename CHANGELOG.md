@@ -1,3 +1,10 @@
+0.11.0
+===
+- Refactor how aws credentials are gathered.
+  - If the caller wants to pass creds, use them
+  - Otherwise, let aws figure out how to get the credentials using their standards
+  - Also support assumed role creds
+
 0.10.0
 ===
 - Update aws-sdk client creation to be able to support non-aws s3 api endpoints (e.g. minio)
