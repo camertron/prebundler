@@ -1,16 +1,18 @@
+# frozen_string_literal: true
+
 require 'aws-sdk'
 
 module Prebundler
   class S3Backend
-    attr_reader :access_key_id, :secret_access_key, :bucket, :region, :endpoint, :force_path_style
+    attr_reader :access_key_id, :secret_access_key, :bucket, :region
 
     def initialize(options = {})
-      @access_key_id = options.fetch(:access_key_id)
-      @secret_access_key = options.fetch(:secret_access_key)
-      @bucket = options.fetch(:bucket)
-      @region = options.fetch(:region) { 'us-east-1' }
-      @endpoint = options.fetch(:endpoint) { 's3.amazonaws.com' }
-      @force_path_style = options.fetch(:force_path_style) { false }
+      @bucket             = options.fetch(:bucket)
+
+      @client             = options.fetch(:client, nil)
+      @access_key_id      = options.fetch(:access_key_id, nil)
+      @secret_access_key  = options.fetch(:secret_access_key, nil)
+      @region             = options.fetch(:region) { ENV['AWS_REGION'] || 'us-east-1' }
     end
 
     def store_file(source_file, dest_file)
@@ -33,7 +35,7 @@ module Prebundler
       files = []
       base_options = {
         bucket: bucket,
-        prefix: "#{Bundler.local_platform.to_s}/#{Prebundler.platform_version}/#{Gem.extension_api_version.to_s}"
+        prefix: "#{Bundler.local_platform}/#{Prebundler.platform_version}/#{Gem.extension_api_version}"
       }
 
       while truncated
@@ -62,7 +64,7 @@ module Prebundler
     private
 
     def client
-      @client ||= Aws::S3::Client.new(region: region, credentials: credentials, endpoint: endpoint, force_path_style: force_path_style)
+      @client ||= Aws::S3::Client.new(region: region, credentials: credentials)
     end
 
     def credentials

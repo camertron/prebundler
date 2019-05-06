@@ -1,3 +1,7 @@
+0.11.0
+===
+- Allow the caller to pass in a s3 client for non-standard setups
+
 0.10.0
 ===
 - Update aws-sdk client creation to be able to support non-aws s3 api endpoints (e.g. minio)
