@@ -129,7 +129,7 @@ module Prebundler
 
         if $?.exitstatus != 0
           out.puts 'Bundle not satisfied, falling back to `bundle install`'
-          system "bundle install #{bundle_install_args}"
+          exec "bundle install #{bundle_install_args}"
         end
       end
 
