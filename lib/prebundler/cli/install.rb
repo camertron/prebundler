@@ -6,6 +6,15 @@ require 'yaml'
 
 module Prebundler
   module Cli
+    class BundleFailedError < StandardError
+      attr_reader :exitstatus
+
+      def initialize(message, exitstatus)
+        super(message)
+        @exitstatus = exitstatus
+      end
+    end
+
     class Install < Base
       def run
         prepare
@@ -13,6 +22,9 @@ module Prebundler
         update_bundle_config
         generate_binstubs
         check
+      rescue BundleFailedError => e
+        out.puts e.message
+        exit e.exitstatus
       end
 
       private
@@ -130,6 +142,12 @@ module Prebundler
         if $?.exitstatus != 0
           out.puts 'Bundle not satisfied, falling back to `bundle install`'
           system "bundle install #{bundle_install_args}"
+
+          if $?.exitstatus != 0
+            raise BundleFailedError.new(
+              "bundler exited with status code #{$?.exitstatus}", $?.exitstatus
+            )
+          end
         end
       end
 

@@ -1,3 +1,7 @@
+0.11.1
+===
+- Exit with nonzero status code if fallback `bundle install` fails.
+
 0.11.0
 ===
 - Allow the caller to pass in a s3 client for non-standard setups
