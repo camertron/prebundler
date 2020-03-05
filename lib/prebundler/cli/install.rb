@@ -21,7 +21,7 @@ module Prebundler
         install
         update_bundle_config
         generate_binstubs
-        check
+        # check
       rescue BundleFailedError => e
         out.puts e.message
         exit e.exitstatus
