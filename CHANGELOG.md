@@ -1,3 +1,8 @@
+0.11.2
+===
+- Always run `bundle install` just in case.
+- Make sure `bundle check` is the _last_ thing that runs.
+
 0.11.1
 ===
 - Exit with nonzero status code if fallback `bundle install` fails.
