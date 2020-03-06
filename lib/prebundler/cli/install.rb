@@ -149,7 +149,7 @@ module Prebundler
         system "bundle check --gemfile #{gemfile_path}"
 
         if $?.exitstatus != 0
-          raise BundleFailedError.new('bundle could not be satisfied', 1)
+          raise BundleFailedError.new('bundle could not be satisfied', $?.exitstatus)
         end
       end
 

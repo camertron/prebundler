@@ -10,19 +10,11 @@ module Prebundler
       end
     end
 
-    attr_reader :strategy, :gemfile_uri
+    attr_reader :strategy
 
     def initialize(name, bundle_path, options = {})
       super
-
       @strategy = options.include?(:git) ? :git : :github
-
-      @gemfile_uri = case @strategy
-        when :github
-          "git://github.com/#{options[@strategy].chomp('.git')}.git"
-        else
-          options[@strategy]
-      end
     end
 
     def install
@@ -30,14 +22,10 @@ module Prebundler
       FileUtils.mkdir_p(install_path)
       FileUtils.mkdir_p(cache_path)
 
-      return if cache_dirs.all? { |cd| File.exist?(cd) } || File.exist?(install_dir)
-
-      cache_dirs.each do |cache_dir|
-        system "git clone #{lockfile_uri} \"#{cache_dir}\" --bare --no-hardlinks --quiet"
-        return $? if $?.exitstatus != 0
-      end
-
-      system "git clone --no-checkout --quiet \"#{cache_dirs.first}\" \"#{install_dir}\""
+      return if File.exist?(cache_dir) || File.exist?(install_dir)
+      system "git clone #{uri} \"#{cache_dir}\" --bare --no-hardlinks --quiet"
+      return $? if $?.exitstatus != 0
+      system "git clone --no-checkout --quiet \"#{cache_dir}\" \"#{install_dir}\""
       return $? if $?.exitstatus != 0
       Dir.chdir(install_dir) { system "git reset --hard --quiet #{revision}" }
       serialize_gemspecs
@@ -46,7 +34,7 @@ module Prebundler
     end
 
     def to_gem
-      "gem '#{name}', git: '#{lockfile_uri}', ref: '#{revision}'"
+      "gem '#{name}', git: '#{uri}', ref: '#{revision}'"
     end
 
     def version
@@ -69,18 +57,15 @@ module Prebundler
       File.join(bundle_path, 'cache', 'bundler', 'git')
     end
 
-    def cache_dirs
-      @cache_dirs ||= [
-        File.join(cache_path, "#{name}-#{gemfile_uri_hash}"),
-        File.join(cache_path, "#{name}-#{lockfile_uri_hash}")
-      ].uniq
+    def cache_dir
+      File.join(cache_path, "#{name}-#{uri_hash}")
     end
 
-    def lockfile_uri
+    def uri
       spec.source.uri
     end
 
-    alias_method :source, :lockfile_uri
+    alias_method :source, :uri
 
     def remote
       nil
@@ -101,7 +86,7 @@ module Prebundler
     end
 
     def repo_name
-      @repo_name ||= URI.parse(lockfile_uri).path.split('/').last.chomp('.git')
+      @repo_name ||= URI.parse(uri).path.split('/').last.chomp('.git')
     end
 
     private
@@ -129,27 +114,18 @@ module Prebundler
       end
     end
 
-    # adapted from
+    # copied from
     # https://github.com/bundler/bundler/blob/fea23637886c1b1bde471c98344b8844f82e60ce/lib/bundler/source/git.rb#L281
-    def uri_hash(uri)
-      input = if uri =~ %r{^\w+://(\w+@)?}
+    def uri_hash
+      if uri =~ %r{^\w+://(\w+@)?}
         # Downcase the domain component of the URI
         # and strip off a trailing slash, if one is present
-        URI.parse(uri).normalize.to_s.sub(%r{/$}, "")
+        input = URI.parse(uri).normalize.to_s.sub(%r{/$}, "")
       else
         # If there is no URI scheme, assume it is an ssh/git URI
-        uri
+        input = uri
       end
-
       Bundler::SharedHelpers.digest(:SHA1).hexdigest(input)
-    end
-
-    def gemfile_uri_hash
-      uri_hash(gemfile_uri)
-    end
-
-    def lockfile_uri_hash
-      uri_hash(lockfile_uri)
     end
   end
 end
