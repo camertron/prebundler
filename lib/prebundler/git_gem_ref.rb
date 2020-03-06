@@ -19,7 +19,7 @@ module Prebundler
 
       @gemfile_uri = case @strategy
         when :github
-          "https://github.com/#{options[@strategy].chomp('.git')}.git"
+          "git://github.com/#{options[@strategy].chomp('.git')}.git"
         else
           options[@strategy]
       end
@@ -30,10 +30,14 @@ module Prebundler
       FileUtils.mkdir_p(install_path)
       FileUtils.mkdir_p(cache_path)
 
-      return if File.exist?(cache_dir) || File.exist?(install_dir)
-      system "git clone #{lockfile_uri} \"#{cache_dir}\" --bare --no-hardlinks --quiet"
-      return $? if $?.exitstatus != 0
-      system "git clone --no-checkout --quiet \"#{cache_dir}\" \"#{install_dir}\""
+      return if cache_dirs.all? { |cd| File.exist?(cd) } || File.exist?(install_dir)
+
+      cache_dirs.each do |cache_dir|
+        system "git clone #{lockfile_uri} \"#{cache_dir}\" --bare --no-hardlinks --quiet"
+        return $? if $?.exitstatus != 0
+      end
+
+      system "git clone --no-checkout --quiet \"#{cache_dirs.first}\" \"#{install_dir}\""
       return $? if $?.exitstatus != 0
       Dir.chdir(install_dir) { system "git reset --hard --quiet #{revision}" }
       serialize_gemspecs
@@ -65,8 +69,11 @@ module Prebundler
       File.join(bundle_path, 'cache', 'bundler', 'git')
     end
 
-    def cache_dir
-      File.join(cache_path, "#{name}-#{uri_hash}")
+    def cache_dirs
+      @cache_dirs ||= [
+        File.join(cache_path, "#{name}-#{gemfile_uri_hash}"),
+        File.join(cache_path, "#{name}-#{lockfile_uri_hash}")
+      ].uniq
     end
 
     def lockfile_uri
@@ -124,17 +131,25 @@ module Prebundler
 
     # adapted from
     # https://github.com/bundler/bundler/blob/fea23637886c1b1bde471c98344b8844f82e60ce/lib/bundler/source/git.rb#L281
-    def uri_hash
-      input = if gemfile_uri =~ %r{^\w+://(\w+@)?}
+    def uri_hash(uri)
+      input = if uri =~ %r{^\w+://(\w+@)?}
         # Downcase the domain component of the URI
         # and strip off a trailing slash, if one is present
-        URI.parse(gemfile_uri).normalize.to_s.sub(%r{/$}, "")
+        URI.parse(uri).normalize.to_s.sub(%r{/$}, "")
       else
         # If there is no URI scheme, assume it is an ssh/git URI
-        gemfile_uri
+        uri
       end
 
       Bundler::SharedHelpers.digest(:SHA1).hexdigest(input)
+    end
+
+    def gemfile_uri_hash
+      uri_hash(gemfile_uri)
+    end
+
+    def lockfile_uri_hash
+      uri_hash(lockfile_uri)
     end
   end
 end
