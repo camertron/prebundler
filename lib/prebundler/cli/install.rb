@@ -21,7 +21,8 @@ module Prebundler
         install
         update_bundle_config
         generate_binstubs
-        check
+        # always run `bundle install` just in case
+        bundle_install
       rescue BundleFailedError => e
         out.puts e.message
         exit e.exitstatus
@@ -136,18 +137,19 @@ module Prebundler
         out.puts 'Done generating binstubs'
       end
 
-      def check
+      def bundle_install
+        system "bundle install #{bundle_install_args}"
+
+        if $?.exitstatus != 0
+          raise BundleFailedError.new(
+            "bundler exited with status code #{$?.exitstatus}", $?.exitstatus
+          )
+        end
+
         system "bundle check --gemfile #{gemfile_path}"
 
         if $?.exitstatus != 0
-          out.puts 'Bundle not satisfied, falling back to `bundle install`'
-          system "bundle install #{bundle_install_args}"
-
-          if $?.exitstatus != 0
-            raise BundleFailedError.new(
-              "bundler exited with status code #{$?.exitstatus}", $?.exitstatus
-            )
-          end
+          raise BundleFailedError.new('bundle could not be satisfied', $?.exitstatus)
         end
       end
 
