@@ -118,6 +118,7 @@ module Prebundler
         config = File.exist?(file) ? YAML.load_file(file) : {}
         config['BUNDLE_WITH'] = with_groups.join(':') unless with_groups.empty?
         config['BUNDLE_WITHOUT'] = without_groups.join(':') unless without_groups.empty?
+        FileUtils.mkdir_p(File.dirname(file))
         File.write(file, YAML.dump(config))
       end
 

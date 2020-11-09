@@ -1,3 +1,7 @@
+0.11.4
+===
+- Ensure .bundle/config directory exists before writing to it.
+
 0.11.3
 ===
 - Support (well, add stubs for) `ruby` and `git_source` methods in Gemfiles.
