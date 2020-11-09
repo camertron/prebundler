@@ -23,6 +23,12 @@ module Prebundler
         gems[spec.name].spec = spec
         gems[spec.name].dependencies = spec.dependencies.map(&:name)
       end
+
+      # Get rid of gems without a spec, as they are likely not supposed
+      # to be installed. This happens for gems like tzinfo-data which are
+      # listed in the standard rails Gemfile but only installed on
+      # certain platforms.
+      gems.reject! { |_, g| g.spec.nil? }
     end
 
     def current_context
@@ -32,6 +38,13 @@ module Prebundler
         source: @current_source,
         prefix: prefix
       }
+    end
+
+    def ruby(*args)
+    end
+
+    # this is probably the wrong thing to do
+    def git_source(*args)
     end
 
     def gem(name, *args)

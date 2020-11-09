@@ -1,3 +1,8 @@
+0.11.3
+===
+- Support (well, add stubs for) `ruby` and `git_source` methods in Gemfiles.
+- Don't attempt to install gems we can't get a spec for.
+
 0.11.2
 ===
 - Always run `bundle install` just in case.
