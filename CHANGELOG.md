@@ -1,3 +1,7 @@
+0.11.5
+===
+- Add `--retry` flag to CLI (currently does nothing).
+
 0.11.4
 ===
 - Ensure .bundle/config directory exists before writing to it.
