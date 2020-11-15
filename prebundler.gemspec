@@ -9,9 +9,7 @@ Gem::Specification.new do |s|
   s.homepage = 'http://github.com/camertron'
 
   s.description = s.summary = 'Gem dependency prebuilder'
-
   s.platform = Gem::Platform::RUBY
-  s.has_rdoc = true
 
   s.add_dependency 'bundler'
   s.add_dependency 'parallel', '~> 1.0'
