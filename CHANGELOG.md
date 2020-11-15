@@ -1,3 +1,9 @@
+0.11.6
+===
+- Fix bug causing native extension compile errors.
+- Fix bug causing executables to not be included in tarballs.
+- Fix bug (maybe introduced by bundler 2?) causing incorrect directory to be tarred. Directory can now include platform apparently.
+
 0.11.5
 ===
 - Add `--retry` flag to CLI (currently does nothing).

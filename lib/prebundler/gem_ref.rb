@@ -48,7 +48,10 @@ module Prebundler
     end
 
     def install
-      system({ "GEM_HOME" => bundle_path }, "gem install -N --ignore-dependencies --source #{source} #{name} -v #{version}")
+      Bundler.with_unbundled_env do
+        system({ "GEM_HOME" => bundle_path }, "gem install -N --ignore-dependencies --source #{source} #{name} -v #{version}")
+      end
+
       $?.exitstatus
     end
 
@@ -71,7 +74,7 @@ module Prebundler
       end
 
       executables.each do |executable|
-        system "tar -C #{bundle_path} -rf #{tar_file} #{File.join('bin', executable)}"
+        system "tar -C #{bundle_path} -rf #{tar_file} #{File.join(relative_gem_dir, 'bin', executable)}"
       end
     end
 
@@ -114,7 +117,17 @@ module Prebundler
     end
 
     def relative_gem_dir
-      File.join('gems', id)
+      @relative_gem_dir ||= begin
+        base = File.join('gems', id)
+        platform = Bundler.local_platform.to_a
+
+        platform.size.downto(0) do |i|
+          dir = [base, *platform[0...i]].join('-')
+          return dir if File.directory?(File.join(bundle_path, dir))
+        end
+
+        base
+      end
     end
 
     def relative_gemspec_files
