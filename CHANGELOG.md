@@ -1,3 +1,7 @@
+0.11.7
+===
+- Fix bug causing platform-specific gems to be installed from source even if they were already present in the backend.
+
 0.11.6
 ===
 - Fix bug causing native extension compile errors.

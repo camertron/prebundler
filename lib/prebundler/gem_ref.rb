@@ -73,8 +73,10 @@ module Prebundler
         system "tar -C #{bundle_path} -rf #{tar_file} #{relative_extension_dir}"
       end
 
-      executables.each do |executable|
-        system "tar -C #{bundle_path} -rf #{tar_file} #{File.join(relative_gem_dir, 'bin', executable)}"
+      gemspecs.each do |gemspec|
+        gemspec.executables.each do |executable|
+          system "tar -C #{bundle_path} -rf #{tar_file} #{File.join(relative_gem_dir, gemspec.bindir, executable)}"
+        end
       end
     end
 
@@ -105,7 +107,13 @@ module Prebundler
     end
 
     def install_dir
-      File.join(install_path, id)
+      @install_dir ||= begin
+        base = File.join(install_path, id)
+
+        find_platform_dir(base) do |dir|
+          File.directory?(dir)
+        end
+      end
     end
 
     def extension_dir
@@ -119,14 +127,10 @@ module Prebundler
     def relative_gem_dir
       @relative_gem_dir ||= begin
         base = File.join('gems', id)
-        platform = Bundler.local_platform.to_a
 
-        platform.size.downto(0) do |i|
-          dir = [base, *platform[0...i]].join('-')
-          return dir if File.directory?(File.join(bundle_path, dir))
+        find_platform_dir(base) do |dir|
+          File.directory?(File.join(bundle_path, dir))
         end
-
-        base
       end
     end
 
@@ -139,6 +143,19 @@ module Prebundler
     def tar_file
       file = File.join(Bundler.local_platform.to_s, Prebundler.platform_version, Gem.extension_api_version.to_s, "#{id}.tar")
       prefix && !prefix.empty? ? File.join(prefix, file) : file
+    end
+
+    private
+
+    def find_platform_dir(base)
+      platform = Bundler.local_platform.to_a
+
+      platform.size.downto(0) do |i|
+        dir = [base, *platform[0...i]].join('-')
+        return dir if yield(dir)
+      end
+
+      base
     end
   end
 end
