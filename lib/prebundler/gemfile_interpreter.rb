@@ -17,8 +17,11 @@ module Prebundler
       instance_eval(File.read(gemfile_path))
 
       lockfile = Bundler::LockfileParser.new(File.read("#{gemfile_path}.lock"))
+      local_platform = Bundler.local_platform.to_s
 
       lockfile.specs.each do |spec|
+        next if spec.platform != 'ruby' && spec.platform.to_s != local_platform
+
         gems[spec.name] ||= GemRef.create(spec.name, bundle_path, options)
         gems[spec.name].spec = spec
         gems[spec.name].dependencies = spec.dependencies.map(&:name)

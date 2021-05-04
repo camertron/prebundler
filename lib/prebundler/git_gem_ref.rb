@@ -22,15 +22,15 @@ module Prebundler
       FileUtils.mkdir_p(install_path)
       FileUtils.mkdir_p(cache_path)
 
-      return if File.exist?(cache_dir) || File.exist?(install_dir)
+      return true if File.exist?(cache_dir) || File.exist?(install_dir)
       system "git clone #{uri} \"#{cache_dir}\" --bare --no-hardlinks --quiet"
-      return $? if $?.exitstatus != 0
+      return false if $?.exitstatus != 0
       system "git clone --no-checkout --quiet \"#{cache_dir}\" \"#{install_dir}\""
-      return $? if $?.exitstatus != 0
+      return false if $?.exitstatus != 0
       Dir.chdir(install_dir) { system "git reset --hard --quiet #{revision}" }
       serialize_gemspecs
       copy_gemspecs
-      $?
+      $?.exitstatus == 0
     end
 
     def to_gem

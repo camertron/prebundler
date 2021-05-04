@@ -48,11 +48,19 @@ module Prebundler
     end
 
     def install
+      # NOTE: the --platform argument doesn't work when --ignore-dependencies
+      # is specified, no idea why
       Bundler.with_unbundled_env do
-        system({ "GEM_HOME" => bundle_path }, "gem install -N --ignore-dependencies --source #{source} #{name} -v #{version}")
+        system(
+          { "GEM_HOME" => bundle_path },
+          'gem install -N --ignore-dependencies '\
+            "--source #{source} #{name} "\
+            "--version #{version} "\
+            "--platform #{Bundler.local_platform.to_s}"
+        )
       end
 
-      $?.exitstatus
+      $?.exitstatus == 0
     end
 
     def install_from_tar(tar_file)

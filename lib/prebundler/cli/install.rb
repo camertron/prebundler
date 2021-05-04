@@ -102,8 +102,12 @@ module Prebundler
           FileUtils.rm(dest_file)
         else
           out.puts "Installing #{gem_ref.id} from source"
-          gem_ref.install
-          store_gem(gem_ref, dest_file) if gem_ref.storable?
+
+          if gem_ref.install
+            store_gem(gem_ref, dest_file) if gem_ref.storable?
+          else
+            out.puts "Failed to install #{gem_ref.id} from source"
+          end
         end
       end
 
@@ -179,7 +183,7 @@ module Prebundler
       end
 
       def bundle_path
-        options.fetch(:'bundle-path')
+        File.expand_path(options.fetch(:'bundle-path'))
       end
 
       def config

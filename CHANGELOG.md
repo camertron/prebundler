@@ -1,3 +1,10 @@
+0.11.8
+===
+- Don't store gems in the backend if they failed to install.
+- Use an absolute bundle path.
+- Only consider a gem from the lockfile if it matches the current platform.
+- Fix `#install` methods so they all return true/false.
+
 0.11.7
 ===
 - Fix bug causing platform-specific gems to be installed from source even if they were already present in the backend.
