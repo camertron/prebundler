@@ -1,4 +1,4 @@
-require 'ohai'
+require 'ohey'
 
 module Prebundler
   autoload :Cli,                'prebundler/cli'
@@ -27,13 +27,13 @@ module Prebundler
     end
 
     def platform_version
-      @platform_version ||= "#{system_info['platform']}-#{system_info['platform_version']}"
+      @platform_version ||= "#{platform.name}-#{platform.version}"
     end
 
     private
 
-    def system_info
-      @@system_info ||= Ohai::System.new.all_plugins(['platform'])
+    def platform
+      @platform ||= Ohey.current_platform
     end
   end
 end

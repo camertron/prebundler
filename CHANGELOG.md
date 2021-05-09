@@ -1,3 +1,7 @@
+0.12.0
+===
+- Switch out ohai for ohey.
+
 0.11.8
 ===
 - Don't store gems in the backend if they failed to install.
