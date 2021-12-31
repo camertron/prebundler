@@ -76,5 +76,9 @@ module Prebundler
     def gemspec
       # do nothing
     end
+
+    def eval_gemfile(path)
+      instance_eval(File.read(path))
+    end
   end
 end
