@@ -1,3 +1,6 @@
+## 0.14.0
+* Add `prebundle binstubs` command, which simply invokes `bundle binstubs`.
+
 ## 0.13.0
 * Support the `eval_gemfile` function in gemfiles.
 * Avoid shelling out to the `tar` command.

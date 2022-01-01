@@ -2,6 +2,7 @@ require 'ohey'
 
 module Prebundler
   autoload :Cli,                'prebundler/cli'
+  autoload :Commands,           'prebundler/commands'
   autoload :Configurator,       'prebundler/configurator'
   autoload :FileBackend,        'prebundler/file_backend'
   autoload :PathGemRef,         'prebundler/path_gem_ref'
