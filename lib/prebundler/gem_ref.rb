@@ -1,3 +1,4 @@
+require 'rubygems/package'
 require 'fileutils'
 require 'set'
 
@@ -64,8 +65,25 @@ module Prebundler
     end
 
     def install_from_tar(tar_file)
-      system "tar -C #{bundle_path} -xf #{tar_file}"
-      $?.exitstatus == 0
+      File.open(tar_file) do |f|
+        Gem::Package::TarReader.new(f) do |tar|
+          tar.each do |entry|
+            path = File.join(bundle_path, entry.full_name)
+
+            if entry.directory?
+              FileUtils.mkdir_p(path)
+            else
+              File.open(path, 'wb') do |new_file|
+                new_file.write(entry.read)
+              end
+            end
+          end
+        end
+      end
+
+      true
+    rescue => e
+      return false
     end
 
     def add_to_tar(tar_file)
