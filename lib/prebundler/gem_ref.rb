@@ -65,6 +65,7 @@ module Prebundler
     end
 
     def install_from_tar(tar_file)
+      puts 'Using ruby-based tar reader'
       File.open(tar_file) do |f|
         Gem::Package::TarReader.new(f) do |tar|
           tar.each do |entry|
