@@ -22,7 +22,7 @@ module Prebundler
         update_bundle_config
         generate_binstubs
         # always run `bundle install` just in case
-        # bundle_install
+        bundle_install
       rescue BundleFailedError => e
         out.puts e.message
         exit e.exitstatus
