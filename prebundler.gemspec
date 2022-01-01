@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'ohey', '~> 1.0'
 
   # @TODO: move s3 support into separate gem
-  s.add_dependency 'aws-sdk', '~> 2.0'
+  s.add_dependency 'aws-sdk-s3', '~> 1.0'
 
   s.executables << 'prebundle'
 

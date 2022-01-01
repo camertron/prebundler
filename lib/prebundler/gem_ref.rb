@@ -49,8 +49,9 @@ module Prebundler
     end
 
     def install
-      # NOTE: the --platform argument doesn't work when --ignore-dependencies
-      # is specified, no idea why
+      # NOTE: the --platform argument used to not work when --ignore-dependencies
+      # was specified, but has been fixed in modern versions of rubygems. See:
+      # https://github.com/rubygems/rubygems/pull/2446 for a very long rabbit hole.
       Bundler.with_unbundled_env do
         system(
           { "GEM_HOME" => bundle_path },
@@ -105,26 +106,6 @@ module Prebundler
         end
       end
     end
-
-    # def add_to_tar(tar_file)
-    #   tar_flags = File.exist?(tar_file) ? '-rf' : '-cf'
-
-    #   system "tar -C #{bundle_path} #{tar_flags} #{tar_file} #{relative_gem_dir}"
-
-    #   relative_gemspec_files.each do |relative_gemspec_file|
-    #     system "tar -C #{bundle_path} -rf #{tar_file} #{relative_gemspec_file}"
-    #   end
-
-    #   if File.directory?(extension_dir)
-    #     system "tar -C #{bundle_path} -rf #{tar_file} #{relative_extension_dir}"
-    #   end
-
-    #   gemspecs.each do |gemspec|
-    #     gemspec.executables.each do |executable|
-    #       system "tar -C #{bundle_path} -rf #{tar_file} #{File.join(relative_gem_dir, gemspec.bindir, executable)}"
-    #     end
-    #   end
-    # end
 
     def executables
       gemspecs.flat_map(&:executables)
