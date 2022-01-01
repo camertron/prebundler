@@ -196,7 +196,7 @@ module Prebundler
     def add_files_to_tar(tar_io, files)
       files.each do |file|
         mode = File.stat(file).mode
-        tar.add_file(file, mode) do |new_file|
+        tar_io.add_file(file, mode) do |new_file|
           new_file.write(File.binread(file))
         end
       end
