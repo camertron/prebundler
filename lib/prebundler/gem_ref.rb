@@ -65,7 +65,6 @@ module Prebundler
     end
 
     def install_from_tar(tar_file)
-      puts 'Using ruby-based tar reader'
       File.open(tar_file) do |f|
         Gem::Package::TarReader.new(f) do |tar|
           tar.each do |entry|
@@ -88,24 +87,44 @@ module Prebundler
     end
 
     def add_to_tar(tar_file)
-      tar_flags = File.exist?(tar_file) ? '-rf' : '-cf'
+      File.open(tar_file) do |f|
+        Gem::Package::TarWriter.new(f) do |tar_io|
+          Dir.chdir(bundle_path) do
+            add_files_to_tar(
+              tar_io, Dir.glob(File.join(relative_gem_dir, '**', '*'))
+            )
 
-      system "tar -C #{bundle_path} #{tar_flags} #{tar_file} #{relative_gem_dir}"
+            add_files_to_tar(tar_io, relative_gemspec_files)
 
-      relative_gemspec_files.each do |relative_gemspec_file|
-        system "tar -C #{bundle_path} -rf #{tar_file} #{relative_gemspec_file}"
-      end
-
-      if File.directory?(extension_dir)
-        system "tar -C #{bundle_path} -rf #{tar_file} #{relative_extension_dir}"
-      end
-
-      gemspecs.each do |gemspec|
-        gemspec.executables.each do |executable|
-          system "tar -C #{bundle_path} -rf #{tar_file} #{File.join(relative_gem_dir, gemspec.bindir, executable)}"
+            if File.directory?(extension_dir)
+              add_files_to_tar(
+                tar_io, Dir.glob(File.join(relative_extension_dir, '**', '*'))
+              )
+            end
+          end
         end
       end
     end
+
+    # def add_to_tar(tar_file)
+    #   tar_flags = File.exist?(tar_file) ? '-rf' : '-cf'
+
+    #   system "tar -C #{bundle_path} #{tar_flags} #{tar_file} #{relative_gem_dir}"
+
+    #   relative_gemspec_files.each do |relative_gemspec_file|
+    #     system "tar -C #{bundle_path} -rf #{tar_file} #{relative_gemspec_file}"
+    #   end
+
+    #   if File.directory?(extension_dir)
+    #     system "tar -C #{bundle_path} -rf #{tar_file} #{relative_extension_dir}"
+    #   end
+
+    #   gemspecs.each do |gemspec|
+    #     gemspec.executables.each do |executable|
+    #       system "tar -C #{bundle_path} -rf #{tar_file} #{File.join(relative_gem_dir, gemspec.bindir, executable)}"
+    #     end
+    #   end
+    # end
 
     def executables
       gemspecs.flat_map(&:executables)
@@ -173,6 +192,15 @@ module Prebundler
     end
 
     private
+
+    def add_files_to_tar(tar_io, files)
+      files.each do |file|
+        mode = File.stat(file).mode
+        tar.add_file(file, mode) do |new_file|
+          new_file.write(File.binread(file))
+        end
+      end
+    end
 
     def find_platform_dir(base)
       platform = Bundler.local_platform.to_a
