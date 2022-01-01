@@ -4,6 +4,9 @@
   - The GNU and BSD versions annoyingly don't accept the same flags, meaning Prebundler can succeed or fail depending on the system it's run on.
   - All tar files are now read and written using pure Ruby.
 * Upgrade S3 client to non-EOL version.
+* Stop ignoring gems that don't match the current platform.
+  - Prebundler shells out to `gem install` when installing individual gems. Older versions of rubygems would fetch gems for the "ruby" platform when the `--ignore-dependencies` option was given, ignoring any platform-specific gems. This resulted in either a) unnecessarily building a bunch of native extensions, or b) installing a gem for the wrong platform (i.e. when no gem existed for the "ruby" platform, eg. helm-rb). I addressed the problem by instructing Prebundler to ignore gems with native extensions, relying on `bundle install` to fix them up. However, the bug has been fixed in modern versions of rubygems, so we can stop ignoring gems.
+* Run `bundle lock` before storing or installing gems to make sure the lockfile matches the Gemfile.
 
 ## 0.12.0
 * Switch out ohai for ohey, which has many fewer dependencies.
