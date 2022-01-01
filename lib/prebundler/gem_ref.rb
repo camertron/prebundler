@@ -87,7 +87,7 @@ module Prebundler
     end
 
     def add_to_tar(tar_file)
-      File.open(tar_file) do |f|
+      File.open(tar_file, 'wb') do |f|
         Gem::Package::TarWriter.new(f) do |tar_io|
           Dir.chdir(bundle_path) do
             add_files_to_tar(
