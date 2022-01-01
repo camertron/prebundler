@@ -17,6 +17,7 @@ module Prebundler
 
     class Install < Base
       def run
+        lock
         prepare
         install
         update_bundle_config
@@ -29,6 +30,10 @@ module Prebundler
       end
 
       private
+
+      def lock
+        system "bundle lock --gemfile #{gemfile_path}"
+      end
 
       def prepare
         FileUtils.mkdir_p(bundle_path)
