@@ -74,6 +74,7 @@ module Prebundler
             if entry.directory?
               FileUtils.mkdir_p(path)
             else
+              FileUtils.mkdir_p(File.dirname(path))
               File.open(path, 'wb') do |new_file|
                 new_file.write(entry.read)
               end
