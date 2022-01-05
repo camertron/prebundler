@@ -78,6 +78,7 @@ module Prebundler
               File.open(path, 'wb') do |new_file|
                 new_file.write(entry.read)
               end
+              File.chmod(entry.header.mode, path)
             end
           end
         end

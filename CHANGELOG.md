@@ -1,3 +1,6 @@
+## 0.14.1
+* Set file permissions when extracting tarballs.
+
 ## 0.14.0
 * Add `prebundle binstubs` command, which simply invokes `bundle binstubs`.
 
