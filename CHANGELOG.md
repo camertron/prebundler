@@ -1,3 +1,6 @@
+## 0.15.0
+* Add the `prebundle lock` command, which simply invokes `bundle lock`.
+
 ## 0.14.1
 * Set file permissions when extracting tarballs.
 

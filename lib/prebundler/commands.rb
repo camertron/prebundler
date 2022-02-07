@@ -110,12 +110,19 @@ module Prebundler
     command :binstubs do
     end
 
+    desc 'Generate binstubs. Accepts the same arguments as `bundle lock`.'
+    command :lock do
+    end
+
     singleton_class.send(:prepend, Module.new do
       def run(args)
-        if args[0] == 'binstubs'
-          exec "bundle binstubs #{args[1..-1].join(' ')}"
-        else
-          super
+        case args[0]
+          when 'binstubs'
+            exec "bundle binstubs #{args[1..-1].join(' ')}"
+          when 'lock'
+            exec "bundle lock #{args[1..-1].join(' ')}"
+          else
+            super
         end
       end
     end)
