@@ -1,3 +1,7 @@
+## 0.15.1
+* Specify file path when evaling other gemfiles.
+  - `instance_eval` takes two additional arguments, the first of which populates the value of the `__FILE__` constant. This argument was not being passed in several cases, which led to an unexpected working directory when calling `eval_gemfile` with relative paths.
+
 ## 0.15.0
 * Add the `prebundle lock` command, which simply invokes `bundle lock`.
 

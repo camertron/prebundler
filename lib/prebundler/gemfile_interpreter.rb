@@ -14,7 +14,8 @@ module Prebundler
       @gemfile_path = gemfile_path
       @bundle_path = bundle_path
       @prefix = options[:prefix]
-      instance_eval(File.read(gemfile_path))
+      gemfile_path = File.expand_path(gemfile_path)
+      instance_eval(File.read(gemfile_path), gemfile_path, 0)
 
       lockfile = Bundler::LockfileParser.new(File.read("#{gemfile_path}.lock"))
 
