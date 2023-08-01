@@ -75,7 +75,8 @@ module Prebundler
     end
 
     def eval_gemfile(path)
-      instance_eval(File.read(path))
+      path = File.expand_path(path)
+      instance_eval(File.read(path), path, 0)
     end
   end
 end
