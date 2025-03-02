@@ -18,11 +18,14 @@ module Prebundler
       instance_eval(File.read(gemfile_path), gemfile_path, 0)
 
       lockfile = Bundler::LockfileParser.new(File.read("#{gemfile_path}.lock"))
+      local_platform = Bundler.local_platform
 
       lockfile.specs.each do |spec|
-        gems[spec.name] ||= GemRef.create(spec.name, bundle_path, options)
-        gems[spec.name].spec = spec
-        gems[spec.name].dependencies = spec.dependencies.map(&:name)
+        if spec.match_platform(local_platform)
+          gems[spec.name] ||= GemRef.create(spec.name, bundle_path, options)
+          gems[spec.name].spec = spec
+          gems[spec.name].dependencies = spec.dependencies.map(&:name)
+        end
       end
 
       # Get rid of gems without a spec, as they are likely not supposed

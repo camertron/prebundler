@@ -1,3 +1,7 @@
+## 0.15.2
+* Fix issue causing prebundler to store empty archives for some gems with native extensions.
+  - `Bundler.local_platform` reports "aarch64-linux" in my Docker container, but eg. nokogiri's platform is "aarch64-linux-gnu." Using Bundler's local platform to identify the gem's installation directory silently fails because we're missing the "-gnu" part, so no files are included in the archive.
+
 ## 0.15.1
 * Specify file path when evaling other gemfiles.
   - `instance_eval` takes two additional arguments, the first of which populates the value of the `__FILE__` constant. This argument was not being passed in several cases, which led to an unexpected working directory when calling `eval_gemfile` with relative paths.

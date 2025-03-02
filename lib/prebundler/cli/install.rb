@@ -117,9 +117,13 @@ module Prebundler
       end
 
       def store_gem(gem_ref, dest_file)
-        out.puts "Storing #{gem_ref.id}"
-        gem_ref.add_to_tar(dest_file)
-        config.storage_backend.store_file(dest_file, gem_ref.tar_file)
+        if File.exist?(gem_ref.install_dir)
+          out.puts "Storing #{gem_ref.id}"
+          gem_ref.add_to_tar(dest_file)
+          config.storage_backend.store_file(dest_file, gem_ref.tar_file)
+        else
+          out.puts "Could not determine install dir for #{gem_ref.id}, skipping storage"
+        end
       end
 
       def update_bundle_config

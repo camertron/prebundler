@@ -188,7 +188,12 @@ module Prebundler
     end
 
     def find_platform_dir(base)
-      platform = Bundler.local_platform.to_a
+      platform = case spec.platform
+        when String
+          [spec.platform]
+        else
+          spec.platform.to_a
+      end
 
       platform.size.downto(0) do |i|
         dir = [base, *platform[0...i]].join('-')
